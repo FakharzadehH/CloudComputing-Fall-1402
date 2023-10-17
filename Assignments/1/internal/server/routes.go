@@ -5,8 +5,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func routes(e *echo.Echo) {
+func routes(e *echo.Echo, h *handlers.Handler) {
 	api := e.Group("/api")
-	api.POST("/submit-request", handlers.UserSignUp())
-	api.GET("/check-request", handlers.CheckStatus())
+	api.POST("/submit-request", h.UserSignUp())
+	api.GET("/check-request", h.CheckStatus())
 }
