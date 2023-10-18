@@ -1,6 +1,10 @@
 package server
 
-import "github.com/labstack/echo/v4"
+import (
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+)
 
 func ErrorHandler() echo.HTTPErrorHandler {
 	return func(err error, c echo.Context) {
@@ -9,6 +13,12 @@ func ErrorHandler() echo.HTTPErrorHandler {
 				c.JSON(httpErr.Code, httpErr.Message)
 				return
 			}
+
+			c.JSON(http.StatusInternalServerError, map[string]string{
+				"Code": "unexpected_error",
+				"Msg":  "Internal server error",
+			})
+			return
 		}
 	}
 }
