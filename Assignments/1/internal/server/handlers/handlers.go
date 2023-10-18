@@ -28,12 +28,37 @@ func (h *Handler) UserSignUp() echo.HandlerFunc {
 	}
 
 	return func(c echo.Context) error {
-		var req request
-		if err := c.Bind(&req); err != nil {
+
+		img1, err := c.FormFile("image1")
+		if err != nil {
 			return err
 		}
-		//res,err :=
-		return nil
+		img2, err := c.FormFile("image2")
+		if err != nil {
+			return err
+		}
+		email := c.FormValue("email")
+		lastName := c.FormValue("last_name")
+		nationalID := c.FormValue("national_id")
+		if err != nil {
+			return err
+		}
+
+		var req request
+		req.Email = email
+		req.LastName = lastName
+		req.NationalID = nationalID
+		req.Image1 = img1
+		req.Image2 = img2
+
+		res, err := h.svcs.SubmitRequest(c.Request().Context(), req.SignUpRequest)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(200, response{
+			GenericMessageResponse: *res,
+		})
 	}
 }
 
@@ -42,7 +67,7 @@ func (h *Handler) CheckStatus() echo.HandlerFunc {
 		payloads.CheckStatusRequest
 	}
 	type response struct {
-		payloads.GenericMessageResponse
+		*payloads.GenericMessageResponse
 	}
 
 	return func(c echo.Context) error {
