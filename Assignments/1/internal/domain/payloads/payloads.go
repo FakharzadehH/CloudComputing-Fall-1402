@@ -1,15 +1,16 @@
 package payloads
 
-type SignUpRequest struct {
-	Email      string `json:"email"`
-	LastName   string `json:"last_name"`
-	NationalID int    `json:"national_id"`
-	Image1     string `json:"image1"`
-	Image2     string `json:"image2"`
-}
+import "mime/multipart"
 
+type SignUpRequest struct {
+	Email      string                `json:"email"`
+	LastName   string                `json:"last_name"`
+	NationalID string                `json:"national_id"`
+	Image1     *multipart.FileHeader `json:"image1"`
+	Image2     *multipart.FileHeader `json:"image2"`
+}
 type CheckStatusRequest struct {
-	NationalID int `json:"national_id"`
+	NationalID string `json:"national_id"`
 }
 
 type GenericMessageResponse struct {
