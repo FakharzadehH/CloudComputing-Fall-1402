@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"io"
 	"mime/multipart"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/domain"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"gorm.io/gorm"
 )
 
@@ -81,4 +83,37 @@ func (r *Repository) GetImageFromS3(objName string) (*os.File, error) {
 		return nil, err
 	}
 	return img, nil
+}
+
+func (r *Repository) PublishToRabbitMQ(message string) error {
+	rabbMQ := config.GetConfig().RabbitMQ
+	conn, err := amqp.Dial(rabbMQ.GetURI())
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+	ch, err := conn.Channel()
+	if err != nil {
+		return err
+	}
+	defer ch.Close()
+	queue, err := ch.QueueDeclare(rabbMQ.QueueName, false, false, false, false, nil)
+	if err != nil {
+		return err
+	}
+
+	err = ch.PublishWithContext(context.TODO(),
+		"",
+		queue.Name,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(message),
+		})
+	if err != nil {
+		return err
+	}
+	return nil
+
 }
