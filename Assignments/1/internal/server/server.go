@@ -13,6 +13,7 @@ func Start() error {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.HTTPErrorHandler = ErrorHandler()
+	e.IPExtractor = echo.ExtractIPDirect()
 	db, err := config.NewGORMConnection(config.GetConfig())
 	if err != nil {
 		return err
