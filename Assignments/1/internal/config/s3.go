@@ -3,6 +3,8 @@ package config
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 type S3 struct {
@@ -21,4 +23,17 @@ func (s3 S3) GenerateS3Config() aws.Config {
 		S3ForcePathStyle: aws.Bool(true),
 	}
 	return s3config
+}
+
+func GenerateS3Client() (*s3.S3, error) {
+
+	s3Session, err := session.NewSessionWithOptions(session.Options{
+		Config:  cfg.S3.GenerateS3Config(),
+		Profile: "filebase",
+	})
+	if err != nil {
+		return nil, err
+	}
+	s3Client := s3.New(s3Session)
+	return s3Client, nil
 }
