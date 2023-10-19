@@ -9,8 +9,9 @@ import (
 var cfg Config
 
 type Config struct {
-	DB DB `mapstructure:"db"`
-	S3 S3 `mapstructure:"s3"`
+	DB       DB       `mapstructure:"db"`
+	S3       S3       `mapstructure:"s3"`
+	RabbitMQ RabbitMQ `mapstructure:"rabbitmq"`
 }
 
 func GetConfig() Config {
