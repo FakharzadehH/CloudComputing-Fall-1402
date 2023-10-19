@@ -10,6 +10,7 @@ var cfg Config
 
 type Config struct {
 	DB DB `mapstructure:"db"`
+	S3 S3 `mapstructure:"s3"`
 }
 
 func GetConfig() Config {
