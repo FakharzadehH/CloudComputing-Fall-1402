@@ -51,7 +51,7 @@ func (h *Handler) UserSignUp() echo.HandlerFunc {
 		req.Image1 = img1
 		req.Image2 = img2
 
-		res, err := h.svcs.SubmitRequest(c.Request().Context(), req.SignUpRequest)
+		res, err := h.svcs.SubmitRequest(c.Request().Context(), req.SignUpRequest, c.RealIP())
 		if err != nil {
 			return err
 		}
