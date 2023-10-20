@@ -2,13 +2,16 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"os"
 
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/config"
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/domain"
+	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/domain/payloads"
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/logger"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -134,4 +137,27 @@ func (r *Repository) PublishToRabbitMQ(message string) error {
 	}
 	return nil
 
+}
+
+func (r *Repository) GetFaceDetection(imgURL string) (string, error) {
+	imagga := config.GetConfig().Imagga
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", "https://api.imagga.com/v2/faces/detections?image_url="+imgURL+"&return_face_id=1", nil)
+	req.SetBasicAuth(imagga.ApiKey, imagga.ApiSecret)
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.Logger().Errorw("Error while sending request to face detection api")
+		return "", err
+	}
+	data := payloads.FaceDetectionResponse{}
+	defer resp.Body.Close()
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		logger.Logger().Errorw("Error while parsing response of face detection api")
+		return "", err
+	}
+	if len(data.Result.Faces) > 0 {
+		return data.Result.Faces[0].FaceID, nil
+	}
+	return "", nil
 }
