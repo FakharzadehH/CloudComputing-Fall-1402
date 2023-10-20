@@ -13,6 +13,7 @@ type Config struct {
 	S3       S3       `mapstructure:"s3"`
 	RabbitMQ RabbitMQ `mapstructure:"rabbitmq"`
 	Imagga   Imagga   `mapstructure:"imagga"`
+	Mailgun  Mailgun  `mapstructure:"mailgun"`
 }
 
 func GetConfig() Config {
