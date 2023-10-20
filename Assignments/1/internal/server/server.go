@@ -22,6 +22,5 @@ func Start() error {
 	svcs := service.New(repo)
 	handler := handlers.New(repo, svcs)
 	routes(e, handler)
-	//TODO : Add routes and if middlewares
 	return e.Start(":1323")
 }
