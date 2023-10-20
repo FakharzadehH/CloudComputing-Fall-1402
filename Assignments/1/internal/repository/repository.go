@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/config"
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/domain"
@@ -15,6 +16,7 @@ import (
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/logger"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/mailgun/mailgun-go/v4"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"gorm.io/gorm"
 )
@@ -181,4 +183,21 @@ func (r *Repository) GetFaceSimilarity(firstFace string, secondFace string) (flo
 	}
 	return data.Result.Score, nil
 
+}
+func (r *Repository) SendAuthStatusEmail(recipient string, message string) error {
+	cfg := config.GetConfig().Mailgun
+	mailgun := mailgun.NewMailgun(cfg.Domain, cfg.ApiKey)
+	sender := "assignment-1@mailgun.com"
+	subject := "assignment-1 authorization status"
+	msg := mailgun.NewMessage(sender, subject, message, recipient)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	defer cancel()
+
+	// Send the message with a 10 second timeout
+	_, _, err := mailgun.Send(ctx, msg)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
