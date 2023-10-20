@@ -18,3 +18,7 @@ type Coordinates struct {
 type FaceDetectionResult struct {
 	Faces []Face `json:"faces"`
 }
+
+type FaceSimilarityResult struct {
+	Score float64 `json:"score"`
+}

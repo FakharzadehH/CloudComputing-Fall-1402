@@ -24,3 +24,7 @@ type GenericMessageResponse struct {
 type FaceDetectionResponse struct {
 	Result domain.FaceDetectionResult `json:"result"`
 }
+
+type FaceSimilarityResponse struct {
+	Result domain.FaceSimilarityResult `json:"result"`
+}
