@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"strconv"
 
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/domain"
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/domain/payloads"
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/repository"
-	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type Service struct {
@@ -21,17 +22,24 @@ func New(repos *repository.Repository) *Service {
 }
 
 func (s *Service) SubmitRequest(ctx context.Context, payload payloads.SignUpRequest, ip string) (*payloads.GenericMessageResponse, error) {
-	hashedNationalID, err := bcrypt.GenerateFromPassword([]byte(payload.NationalID), bcrypt.DefaultCost)
-	if err != nil {
+	encodedNationalID := base64.StdEncoding.EncodeToString([]byte(payload.NationalID))
+	checkExisting := domain.User{}
+	err := s.repos.GetByNationalID(encodedNationalID, &checkExisting)
+	if err == nil {
 		return &payloads.GenericMessageResponse{
-			Message: "err while hashing national id",
+			Message: "a request with the same national id exists",
+		}, err
+	}
+	if err != gorm.ErrRecordNotFound {
+		return &payloads.GenericMessageResponse{
+			Message: "error while checking if a request with same national id exists",
 		}, err
 	}
 
 	user := domain.User{
 		Email:      payload.Email,
 		LastName:   payload.LastName,
-		NationalID: string(hashedNationalID),
+		NationalID: string(encodedNationalID),
 		IP:         ip,
 		State:      domain.UserAuthStatePending,
 	}
@@ -70,7 +78,6 @@ func (s *Service) SubmitRequest(ctx context.Context, payload payloads.SignUpRequ
 		Message: "درخواست احراز هویت شما ثبت شد",
 	}, nil
 }
-
 func (s *Service) ProccessRequest(userID int) error {
 	user := domain.User{}
 	if err := s.repos.GetByID(userID, &user); err != nil {
@@ -152,4 +159,40 @@ func (s *Service) checkSimilar(img1 string, img2 string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func (s *Service) CheckStatus(ctx context.Context, payload payloads.CheckStatusRequest, ip string) (*payloads.GenericMessageResponse, error) {
+	encodedNationalID := base64.StdEncoding.EncodeToString([]byte(payload.NationalID))
+
+	user := domain.User{}
+	if err := s.repos.GetByNationalID(string(encodedNationalID), &user); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return &payloads.GenericMessageResponse{
+				Message: "درخواستی با این کد ملی یافت نشد",
+			}, nil
+		}
+
+		return &payloads.GenericMessageResponse{
+			Message: "err while getting user from db",
+		}, err
+	}
+
+	if ip != user.IP {
+		return &payloads.GenericMessageResponse{
+			Message: "دسترسی غیرمجاز",
+		}, nil
+	}
+	message := ""
+	switch user.State {
+	case domain.UserAuthStatePending:
+		message = "در حال بررسی"
+	case domain.UserAuthStateDeclined:
+		message = "درخواست احراز هویت شما رد شده است، لطفا کمی بعد مجددا تلاش کنید"
+	case domain.UserAuthStateAccepted:
+		message = "احراز هویت شما با موفقیت انجام شد، نام کاربری شما" + strconv.Itoa(user.ID) + " است"
+	}
+	return &payloads.GenericMessageResponse{
+		Message: message,
+	}, nil
+
 }
