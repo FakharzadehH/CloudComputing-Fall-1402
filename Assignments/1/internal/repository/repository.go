@@ -161,3 +161,24 @@ func (r *Repository) GetFaceDetection(imgURL string) (string, error) {
 	}
 	return "", nil
 }
+
+func (r *Repository) GetFaceSimilarity(firstFace string, secondFace string) (float64, error) {
+	imagga := config.GetConfig().Imagga
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", "https://api.imagga.com/v2/faces/similarity?face_id="+firstFace+"&second_face_id="+secondFace, nil)
+	req.SetBasicAuth(imagga.ApiKey, imagga.ApiSecret)
+	resp, err := client.Do(req)
+	if err != nil {
+		logger.Logger().Errorw("Error while sending request to face similarity api")
+		return 0, err
+	}
+	defer resp.Body.Close()
+	data := payloads.FaceSimilarityResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		logger.Logger().Errorw("Error while parsing response of face detection api")
+		return 0, err
+	}
+	return data.Result.Score, nil
+
+}
