@@ -109,12 +109,13 @@ func (s *Service) ProccessRequest(userID int) error {
 			return err
 		}
 		message = "احراز هویت شما رد شد"
+	} else {
+		user.State = domain.UserAuthStateAccepted
+		if err := s.repos.Upsert(&user); err != nil {
+			return err
+		}
 	}
 
-	user.State = domain.UserAuthStateAccepted
-	if err := s.repos.Upsert(&user); err != nil {
-		return err
-	}
 	err = s.repos.SendAuthStatusEmail(user.Email, message)
 	if err != nil {
 		return err
