@@ -2,12 +2,14 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"os"
 
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/config"
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/domain"
+	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/logger"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -56,8 +58,17 @@ func (r *Repository) UpsertImageIntoS3(img *multipart.FileHeader) error {
 	if _, err := s3Client.PutObject(s3Input); err != nil {
 		return err
 	}
+	objectAcl := &s3.PutObjectAclInput{
+		Bucket: bucket,
+		Key:    aws.String(img.Filename),
+		ACL:    aws.String("public-read"),
+	} // set access to public
+	_, err = s3Client.PutObjectAcl(objectAcl)
+	if err != nil {
+		logger.Logger().Errorw("error while updating acl", "error", err)
+	}
 	return nil
-	//check https://docs.filebase.com/code-development-+-sdks/code-development/aws-sdk-go-golang
+	//checkhttps://docs.arvancloud.ir/fa/developer-tools/sdk/object-storage/
 
 }
 
@@ -85,10 +96,17 @@ func (r *Repository) GetImageFromS3(objName string) (*os.File, error) {
 	return img, nil
 }
 
+func (r *Repository) GenerateS3ImageURL(objName string) string {
+	s3Config := config.GetConfig().S3
+	url := fmt.Sprintf("%s/%s/%s", s3Config.Endpoint, s3Config.BucketName, objName)
+	return url
+}
+
 func (r *Repository) PublishToRabbitMQ(message string) error {
 	rabbMQ := config.GetConfig().RabbitMQ
 	conn, err := amqp.Dial(rabbMQ.GetURI())
 	if err != nil {
+		logger.Logger().Debugw("rabbitMQ Connection err", "error", err)
 		return err
 	}
 	defer conn.Close()
