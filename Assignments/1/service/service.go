@@ -91,38 +91,30 @@ func (s *Service) ProccessRequest(userID int) error {
 	//get images urls from s3
 	img1 := s.repos.GenerateS3ImageURL(user_id + "_1.jpg")
 	img2 := s.repos.GenerateS3ImageURL(user_id + "_2.jpg")
-	message := "احزار هویت شما با موفقیت انجام شد"
+	message := "احراز هویت شما رد شد"
+	user.State = domain.UserAuthStateDeclined
 	//check if face exists in both images
 	exists, face1ID, face2ID, err := s.checkFaces(img1, img2)
 	if err != nil {
 		return err
 	}
-	if !exists {
-		user.State = domain.UserAuthStateDeclined
-		if err := s.repos.Upsert(&user); err != nil {
+	if exists {
+		//check if images have the same face
+		similar, err := s.checkSimilar(face1ID, face2ID)
+		if err != nil {
 			return err
 		}
-		message = "احراز هویت شما رد شد"
+
+		if similar {
+			user.State = domain.UserAuthStateAccepted
+			message = "احراز هویت شما با موفقیت شد"
+		}
+
 	}
-	//check if images have the same face
-	similar, err := s.checkSimilar(face1ID, face2ID)
-	if err != nil {
+	//update user state in db
+	if err := s.repos.Upsert(&user); err != nil {
 		return err
 	}
-
-	if !similar {
-		user.State = domain.UserAuthStateDeclined
-		if err := s.repos.Upsert(&user); err != nil {
-			return err
-		}
-		message = "احراز هویت شما رد شد"
-	} else {
-		user.State = domain.UserAuthStateAccepted
-		if err := s.repos.Upsert(&user); err != nil {
-			return err
-		}
-	}
-
 	err = s.repos.SendAuthStatusEmail(user.Email, message)
 	if err != nil {
 		return err
