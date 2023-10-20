@@ -75,8 +75,12 @@ func (h *Handler) CheckStatus() echo.HandlerFunc {
 		if err := c.Bind(&req); err != nil {
 			return err
 		}
-		//res,err :=
-		return nil
-		//res, err :=
+		res, err := h.svcs.CheckStatus(c.Request().Context(), req.CheckStatusRequest, c.RealIP())
+		if err != nil {
+			return err
+		}
+		return c.JSON(200, response{
+			GenericMessageResponse: res,
+		})
 	}
 }
