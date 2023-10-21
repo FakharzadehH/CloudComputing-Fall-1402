@@ -181,7 +181,7 @@ func (s *Service) CheckStatus(ctx context.Context, payload payloads.CheckStatusR
 	case domain.UserAuthStateDeclined:
 		message = "درخواست احراز هویت شما رد شده است، لطفا کمی بعد مجددا تلاش کنید"
 	case domain.UserAuthStateAccepted:
-		message = "احراز هویت شما با موفقیت انجام شد، نام کاربری شما" + strconv.Itoa(user.ID) + " است"
+		message = "احراز هویت شما با موفقیت انجام شد. نام کاربری شما " + strconv.Itoa(user.ID) + " است"
 	}
 	return &payloads.GenericMessageResponse{
 		Message: message,
