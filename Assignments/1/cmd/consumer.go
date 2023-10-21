@@ -41,6 +41,7 @@ func consumerFunc(cmd *cobra.Command, args []string) {
 			}
 		}
 	}()
+
 	go consume(repo, svcs, rabbitMQ) // this go routine consumes messages from rabbitMQ queue
 	// stop if interrupt signal
 	ch := make(chan os.Signal, 1)
@@ -62,15 +63,17 @@ func consume(repo *repository.Repository, svcs *service.Service, conn *amqp.Conn
 	if err != nil {
 		logger.Logger().Fatalw("error while consuming messages from rabbitMQ")
 	}
+
 	go func() {
 		for data := range msgs {
+
 			userID, _ := strconv.Atoi(string(data.Body))
 			if err := svcs.ProccessRequest(userID); err != nil {
 				// do not ack msg from rabbitMQ if err != nil
 				logger.Logger().Errorw("Error while proccessing user request", "error", err)
 				continue
 			}
-			logger.Logger().Debugw("user authorization proccessed successfully", "user id", userID)
+			logger.Logger().Infow("user authorization proccessed successfully", "user id", userID)
 			data.Ack(true)
 		}
 	}()
