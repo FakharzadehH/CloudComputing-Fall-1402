@@ -1,2 +1,2 @@
 # CloudComputing-Fall-1402
-Amirkabir Uni's Cloud Computing course assignments
+Amirkabir University Cloud Computing Course Assignments, Fall 2023
