@@ -1,6 +1,8 @@
 package server
 
 import (
+	"os"
+
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/config"
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/repository"
 	"github.com/FakharzadehH/CloudComputing-Fall-1402/internal/server/handlers"
@@ -23,5 +25,5 @@ func Start() error {
 
 	api := e.Group("/api")
 	api.GET("/check-weather", h.CheckWeather())
-	return e.Start(":1323") // + os.Getenv("SERVER_PORT"))
+	return e.Start(":" + os.Getenv("SERVER_PORT"))
 }
