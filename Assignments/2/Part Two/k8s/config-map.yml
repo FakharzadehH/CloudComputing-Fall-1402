@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weather-config
+data:
+  config.yaml: |-
+    REDIS:
+      HOST: redis-service
+      PORT: 6379
+      EXPIRY: 300
+    APP:
+      CITY_NAME: TEHRAN
+    NINJAS_API:
+      API_KEY: bf4ab758f2msh7488a0690630a5ep1ac539jsn8703acc191ad
+      API_HOST: weather-by-api-ninjas.p.rapidapi.com

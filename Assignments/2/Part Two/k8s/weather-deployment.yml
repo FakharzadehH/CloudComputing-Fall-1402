@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-report
+  labels:
+    app: weather-report
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: weather-report
+  template:
+    metadata:
+      labels:
+        app: weather-report
+    spec:
+      containers:
+      - image: h0si/cc-assignment2-p2:latest
+        name: weather-report
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 1323
+        env:
+          - name: SERVER_PORT
+            value: "1323"
+        volumeMounts:
+          - mountPath: /app/config.yaml
+            subPath: config.yaml
+            name: config-map
+            readOnly: true
+      volumes:
+        - name: config-map
+          configMap:
+            name: weather-config
